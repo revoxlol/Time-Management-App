@@ -6,18 +6,39 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Container from '@mui/material/Container';
-
+import axios from 'axios';
 const TimeManagementApp = () => {
   const [startLocation, setStartLocation] = useState('');
   const [destination, setDestination] = useState('');
   const [modeOfTravel, setModeOfTravel] = useState('driving');
   const [arrivalTime, setArrivalTime] = useState('');
+  const [departureTime, setDepartureTime] = useState(null);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-   
-  };
 
+    try {
+      const response = await axios.post('/app/calculate-departure-time', {
+        location: startLocation,
+        destination,
+        modeOfTravel,
+        arrivalTime,
+      });
+
+      setDepartureTime(response.data);
+      setError(null);
+    } catch (error) {
+      if (error.response) {
+        setError(`Error: ${error.response.data.message}`);
+      } else if (error.request) {
+        setError('No response received from the server');
+      } else {
+        setError(`Error: ${error.message}`);
+      }
+      setDepartureTime(null);
+    }
+  };
   return (
     <Container maxWidth="sm" style={{ marginTop: '50px' }}>
       <div>
@@ -69,6 +90,13 @@ const TimeManagementApp = () => {
           <Button variant="contained" color="primary" type="submit">
             Calculate Departure Time
           </Button>
+          {departureTime && (
+            <p>Estimated Departure Time: {departureTime}</p>
+          )}
+
+          {error && (
+            <p style={{ color: 'red' }}>{error}</p>
+          )}
         </form>
       </div>
     </Container>
